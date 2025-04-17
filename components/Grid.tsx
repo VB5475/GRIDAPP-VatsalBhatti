@@ -1,7 +1,6 @@
-// components/Grid.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
  Search,
  Filter,
@@ -16,30 +15,58 @@ import {
  Menu,
 } from "lucide-react";
 
-export default function Grid({ data, downloadDataAsCsv }) {
- const [selectedTickers, setSelectedTickers] = useState([]);
- const [filters, setFilters] = useState({
+// Define interfaces for type safety
+interface TradeData {
+ time: string;
+ client: string;
+ ticker: string;
+ hasSignal: boolean;
+ side: string;
+ product: string;
+ qty: string;
+ price: string;
+}
+
+interface GridProps {
+ data: TradeData[];
+ downloadDataAsCsv: (data: TradeData[]) => void;
+}
+
+interface SortConfig {
+ key: keyof TradeData | null;
+ direction: "asc" | "desc" | null;
+}
+
+interface FilterState {
+ time: string[];
+ side: string[];
+ product: string[];
+}
+
+export default function Grid({ data, downloadDataAsCsv }: GridProps) {
+ const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
+ const [filters, setFilters] = useState<FilterState>({
   time: [],
   side: [],
   product: [],
  });
- const [tempFilters, setTempFilters] = useState({
+ const [tempFilters, setTempFilters] = useState<FilterState>({
   time: [],
   side: [],
   product: [],
  });
- const [filterDropdown, setFilterDropdown] = useState(null);
- const [currentPage, setCurrentPage] = useState(1);
- const [tooltip, setTooltip] = useState(null);
- const [sortConfig, setSortConfig] = useState({
+ const [filterDropdown, setFilterDropdown] = useState<string | null>(null);
+ const [currentPage, setCurrentPage] = useState<number>(1);
+ const [tooltip, setTooltip] = useState<string | null>(null);
+ const [sortConfig, setSortConfig] = useState<SortConfig>({
   key: null,
   direction: null,
  });
- const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+ const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
 
  const rowsPerPage = 10;
 
- const toggleTicker = (ticker) => {
+ const toggleTicker = (ticker: string) => {
   setSelectedTickers((prev) =>
    prev.includes(ticker) ? prev.filter((t) => t !== ticker) : [...prev, ticker]
   );
@@ -60,8 +87,8 @@ export default function Grid({ data, downloadDataAsCsv }) {
   setSortConfig({ key: null, direction: null });
  };
 
- const handleSort = (key) => {
-  let direction = "asc";
+ const handleSort = (key: keyof TradeData) => {
+  let direction: "asc" | "desc" | null = "asc";
 
   if (sortConfig.key === key) {
    if (sortConfig.direction === "asc") {
@@ -94,8 +121,8 @@ export default function Grid({ data, downloadDataAsCsv }) {
  // Apply sorting
  if (sortConfig.key && sortConfig.direction) {
   processedData.sort((a, b) => {
-   const aValue = a[sortConfig.key];
-   const bValue = b[sortConfig.key];
+   const aValue = a[sortConfig.key as keyof TradeData];
+   const bValue = b[sortConfig.key as keyof TradeData];
 
    if (aValue < bValue) {
     return sortConfig.direction === "asc" ? -1 : 1;
@@ -113,9 +140,12 @@ export default function Grid({ data, downloadDataAsCsv }) {
  );
  const totalPages = Math.ceil(processedData.length / rowsPerPage);
 
- const uniqueValues = (key) => [...new Set(data.map((item) => item[key]))];
+ const uniqueValues = (key: keyof FilterState) => {
+  const set = new Set<string>(data.map((item) => item[key]));
+  return Array.from(set);
+ };
 
- const handleTempChange = (filterKey, value) => {
+ const handleTempChange = (filterKey: keyof FilterState, value: string) => {
   setTempFilters((prev) => {
    const alreadySelected = prev[filterKey].includes(value);
    return {
@@ -127,7 +157,7 @@ export default function Grid({ data, downloadDataAsCsv }) {
   });
  };
 
- const applyFilters = (key) => {
+ const applyFilters = (key: keyof FilterState) => {
   setFilters((prev) => ({
    ...prev,
    [key]: tempFilters[key],
@@ -135,7 +165,7 @@ export default function Grid({ data, downloadDataAsCsv }) {
   setFilterDropdown(null);
  };
 
- const clearFilters = (key) => {
+ const clearFilters = (key: keyof FilterState) => {
   setFilters((prev) => ({ ...prev, [key]: [] }));
   setTempFilters((prev) => ({ ...prev, [key]: [] }));
   setFilterDropdown(null);
@@ -145,7 +175,7 @@ export default function Grid({ data, downloadDataAsCsv }) {
   downloadDataAsCsv(processedData);
  };
 
- const renderSortIcon = (key) => {
+ const renderSortIcon = (key: keyof TradeData) => {
   if (sortConfig.key !== key) {
    return (
     <button
@@ -176,18 +206,18 @@ export default function Grid({ data, downloadDataAsCsv }) {
  };
 
  // Close filter dropdown when clicking outside
- const handleClickOutside = (e) => {
+ const handleClickOutside = (e: MouseEvent) => {
   if (
    filterDropdown &&
-   !e.target.closest(".filter-dropdown") &&
-   !e.target.closest(".filter-button")
+   !(e.target as Element).closest(".filter-dropdown") &&
+   !(e.target as Element).closest(".filter-button")
   ) {
    setFilterDropdown(null);
   }
  };
 
  // Add click event listener
- useState(() => {
+ useEffect(() => {
   document.addEventListener("mousedown", handleClickOutside);
   return () => {
    document.removeEventListener("mousedown", handleClickOutside);
@@ -294,35 +324,37 @@ export default function Grid({ data, downloadDataAsCsv }) {
      </div>
 
      {/* Filter groups */}
-     {["time", "side", "product"].map((filterKey) => (
-      <div key={filterKey} className="space-y-2">
-       <h4 className="text-sm font-medium capitalize">{filterKey}</h4>
-       <div className="space-y-1">
-        {uniqueValues(filterKey).map((val) => (
-         <label key={val} className="flex items-center gap-2 text-sm">
-          <input
-           type="checkbox"
-           checked={filters[filterKey].includes(val)}
-           onChange={() => {
-            handleTempChange(filterKey, val);
-            // Immediately apply on mobile
-            setFilters((prev) => {
-             const alreadySelected = prev[filterKey].includes(val);
-             return {
-              ...prev,
-              [filterKey]: alreadySelected
-               ? prev[filterKey].filter((v) => v !== val)
-               : [...prev[filterKey], val],
-             };
-            });
-           }}
-          />
-          {val}
-         </label>
-        ))}
+     {(["time", "side", "product"] as Array<keyof FilterState>).map(
+      (filterKey) => (
+       <div key={filterKey} className="space-y-2">
+        <h4 className="text-sm font-medium capitalize">{filterKey}</h4>
+        <div className="space-y-1">
+         {uniqueValues(filterKey).map((val) => (
+          <label key={val} className="flex items-center gap-2 text-sm">
+           <input
+            type="checkbox"
+            checked={filters[filterKey].includes(val)}
+            onChange={() => {
+             handleTempChange(filterKey, val);
+             // Immediately apply on mobile
+             setFilters((prev) => {
+              const alreadySelected = prev[filterKey].includes(val);
+              return {
+               ...prev,
+               [filterKey]: alreadySelected
+                ? prev[filterKey].filter((v) => v !== val)
+                : [...prev[filterKey], val],
+              };
+             });
+            }}
+           />
+           {val}
+          </label>
+         ))}
+        </div>
        </div>
-      </div>
-     ))}
+      )
+     )}
 
      <button
       onClick={() => {
@@ -343,21 +375,26 @@ export default function Grid({ data, downloadDataAsCsv }) {
       <thead className="bg-gray-50">
        <tr>
         {[
-         { label: "Time", key: "time" },
-         { label: "Client", key: "client" },
-         { label: "Ticker", key: "ticker" },
-         { label: "Side", key: "side" },
-         { label: "Product", key: "product" },
-         { label: "Qty", key: "qty", fullLabel: "Qty (Executed/Total)" },
-         { label: "Price", key: "price" },
-         { label: "Actions", key: null },
+         { label: "Time", key: "time" as keyof TradeData },
+         { label: "Client", key: "client" as keyof TradeData },
+         { label: "Ticker", key: "ticker" as keyof TradeData },
+         { label: "Side", key: "side" as keyof TradeData },
+         { label: "Product", key: "product" as keyof TradeData },
+         {
+          label: "Qty",
+          key: "qty" as keyof TradeData,
+          fullLabel: "Qty (Executed/Total)",
+         },
+         { label: "Price", key: "price" as keyof TradeData },
+         { label: "Actions", key: null as null },
         ].map((header, idx) => {
-         const fieldMap = {
+         const fieldMap: Record<string, keyof FilterState> = {
           Time: "time",
           Side: "side",
           Product: "product",
          };
-         const filterKey = fieldMap[header.label];
+         const filterKey =
+          header.label in fieldMap ? fieldMap[header.label] : null;
          return (
           <th
            key={idx}
@@ -384,7 +421,7 @@ export default function Grid({ data, downloadDataAsCsv }) {
             )}
             {header.key && renderSortIcon(header.key)}
            </div>
-           {filterDropdown === filterKey && (
+           {filterDropdown === filterKey && filterKey && (
             <div className="absolute left-0 top-full mt-1 w-48 rounded border bg-white shadow-lg p-2 space-y-2 text-sm z-50 filter-dropdown">
              <div className="max-h-48 overflow-y-auto pb-1">
               {uniqueValues(filterKey).map((val) => (

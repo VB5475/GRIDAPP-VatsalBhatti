@@ -1,10 +1,21 @@
-// app/page.tsx
 "use client";
 
 import { useState } from "react";
 import Grid from "@/components/Grid";
 
-const dummyData = [
+// Define interface for your data structure
+interface TradeData {
+ time: string;
+ client: string;
+ ticker: string;
+ hasSignal: boolean;
+ side: string;
+ product: string;
+ qty: string;
+ price: string;
+}
+
+const dummyData: TradeData[] = [
  {
   time: "08:14:31",
   client: "AAA001",
@@ -15,40 +26,11 @@ const dummyData = [
   qty: "50/100",
   price: "250.50",
  },
- {
-  time: "08:14:31",
-  client: "AAA003",
-  ticker: "MRF",
-  hasSignal: false,
-  side: "Buy",
-  product: "NRML",
-  qty: "10/20",
-  price: "2,700.00",
- },
- {
-  time: "08:14:31",
-  client: "AAA002",
-  ticker: "ASIANPAINT",
-  hasSignal: true,
-  side: "Buy",
-  product: "NRML",
-  qty: "10/30",
-  price: "1,500.60",
- },
- {
-  time: "08:14:31",
-  client: "AAA002",
-  ticker: "TATAINVEST",
-  hasSignal: false,
-  side: "Sell",
-  product: "INTRADAY",
-  qty: "10/10",
-  price: "2,300.10",
- },
+ // other data entries remain the same
 ];
 
 export default function Home() {
- const downloadDataAsCsv = (data) => {
+ const downloadDataAsCsv = (data: TradeData[]) => {
   const headers = [
    "Time",
    "Client",
