@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Grid from "@/components/Grid";
+import DataGrid from "@/components/DataGrid";
+import { MoreVertical } from "lucide-react";
 
-// Define interface for your data structure
 interface TradeData {
  time: string;
  client: string;
@@ -70,17 +70,31 @@ export default function Home() {
    "Price",
   ];
 
+  const escapeField = (field: string, isQty: boolean = false): string => {
+   if (isQty) {
+    return `"'${field.replace(/"/g, '""')}"`;
+   }
+
+   if (
+    field &&
+    (field.includes(",") || field.includes('"') || field.includes("\n"))
+   ) {
+    return `"${field.replace(/"/g, '""')}"`;
+   }
+   return field;
+  };
+
   const csvData = [
    headers.join(","),
    ...data.map((row) =>
     [
-     row.time,
-     row.client,
-     row.ticker,
-     row.side,
-     row.product,
-     row.qty,
-     row.price,
+     escapeField(row.time),
+     escapeField(row.client),
+     escapeField(row.ticker),
+     escapeField(row.side),
+     escapeField(row.product),
+     escapeField(row.qty, true),
+     escapeField(row.price),
     ].join(",")
    ),
   ].join("\n");
@@ -94,6 +108,35 @@ export default function Home() {
   URL.revokeObjectURL(url);
  };
 
+ const columns = [
+  { key: "time" as keyof TradeData, label: "Time", filterable: true },
+  { key: "client" as keyof TradeData, label: "Client" },
+  { key: "ticker" as keyof TradeData, label: "Ticker" },
+  { key: "side" as keyof TradeData, label: "Side", filterable: true },
+  { key: "product" as keyof TradeData, label: "Product", filterable: true },
+  {
+   key: "qty" as keyof TradeData,
+   label: "Qty",
+   fullLabel: "Qty (Executed/Total)",
+  },
+  { key: "price" as keyof TradeData, label: "Price" },
+  {
+   key: null,
+   label: "Actions",
+   renderCell: (_: any, row: TradeData) => (
+    <button
+     className="text-gray-400 hover:text-gray-600"
+     onClick={() => console.log("Action clicked for:", row.ticker)}>
+     <MoreVertical className="h-5 w-5" />
+    </button>
+   ),
+  },
+ ];
+
+ const handleRowAction = (row: TradeData, action: string) => {
+  console.log(`Action ${action} on row:`, row);
+ };
+
  return (
   <main className="min-h-screen bg-gray-50 p-4 md:p-6">
    <div className="mx-auto max-w-[1400px]">
@@ -105,7 +148,22 @@ export default function Home() {
      </div>
     </div>
 
-    <Grid data={dummyData} downloadDataAsCsv={downloadDataAsCsv} />
+    <DataGrid
+     data={dummyData}
+     columns={columns}
+     uniqueIdentifier="ticker"
+     filterableFields={["time", "side", "product"]}
+     onDownload={downloadDataAsCsv}
+     showSearch={true}
+     searchPlaceholder="Search for a stock, future, option or index"
+     rowsPerPage={10}
+     showUserProfile={true}
+     userId="AAA002"
+     userName="Lalit"
+     taggableField="ticker"
+     allowFiltering={true}
+     onRowAction={handleRowAction}
+    />
    </div>
   </main>
  );

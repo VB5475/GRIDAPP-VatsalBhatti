@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,10 +23,8 @@ export default function Navbar() {
  const [windowWidth, setWindowWidth] = useState(0);
 
  useEffect(() => {
-  // Set initial window width
   setWindowWidth(window.innerWidth);
 
-  // Update window width when resized
   const handleResize = () => {
    setWindowWidth(window.innerWidth);
    if (window.innerWidth >= 768) {
@@ -44,14 +41,12 @@ export default function Navbar() {
  return (
   <div className="border-b bg-white">
    <div className="mx-auto max-w-[1400px]">
-    {/* Top bar with logo and market data */}
     <div className="flex items-center justify-between px-4 py-2 md:px-6">
      <div className="flex items-center gap-6 overflow-x-auto">
       <Link href="/" className="flex-shrink-0">
        <BarChart2 className="h-6 w-6 text-amber-600" />
       </Link>
 
-      {/* Market data - hide on smallest screens */}
       <div className="hidden sm:flex items-center gap-4 overflow-x-auto">
        {marketData.map((item, index) => (
         <div
@@ -67,7 +62,6 @@ export default function Navbar() {
      </div>
 
      <div className="flex items-center gap-4">
-      {/* Mobile menu button */}
       {isMobile ? (
        <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -99,11 +93,9 @@ export default function Navbar() {
     </div>
    </div>
 
-   {/* Mobile menu - show when mobileMenuOpen is true */}
    {mobileMenuOpen && (
     <div className="md:hidden bg-white border-t border-gray-200">
      <div className="p-4 space-y-4">
-      {/* Mobile market data */}
       <div className="grid grid-cols-2 gap-4">
        {marketData.map((item, index) => (
         <div key={index} className="flex flex-col text-sm">
@@ -113,7 +105,6 @@ export default function Navbar() {
        ))}
       </div>
 
-      {/* Mobile nav links */}
       <div className="space-y-3 pt-2 border-t border-gray-200">
        {navItems.map((item, index) => (
         <Link
