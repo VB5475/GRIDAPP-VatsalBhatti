@@ -2,7 +2,7 @@
 
 Hey there! 👋 This is my trading dashboard app made with Next.js and Tailwind CSS for the 021 Trade internship assignment.
 
-![App Screenshot](https://via.placeholder.com/600x300)
+[Check out the deployed app here! 🚀](https://gridapp-vatsal-bhatti-um7y.vercel.app/)
 
 ## What I built
 
@@ -34,7 +34,7 @@ I used:
 /components - Reusable parts like DataGrid and Navbar
 ```
 
-## Cool stuff I learned
+## Cool stuff I Implemented
 
 1. How to make things work on mobile:
 
